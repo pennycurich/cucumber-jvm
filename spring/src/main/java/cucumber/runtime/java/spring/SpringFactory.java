@@ -20,36 +20,31 @@ import java.util.HashSet;
 
 /**
  * Spring based implementation of ObjectFactory.
- * <p/>
- * <p>
  * <ul>
  * <li>It uses TestContextManager to manage the spring context.
- * Configuration via: @ContextConfiguration or @ContextHierarcy
- * At least on step definition class needs to have a @ContextConfiguration or
- * @ContextHierarchy annotation. If more that one step definition class has such
+ * Configuration via: &#64;ContextConfiguration or &#64;ContextHierarcy
+ * At least on step definition class needs to have a ^#64ContextConfiguration or
+ * &#64;ContextHierarchy annotation. If more that one step definition class has such
  * an annotation, the annotations must be equal on the different step definition
  * classes. If no step definition class with @ContextConfiguration or
- * @ContextHierarcy is found, it will try to load cucumber.xml from the classpath.
+ * &#64;ContextHierarcy is found, it will try to load cucumber.xml from the classpath.
  * </li>
- * <li>The step definitions class with @ContextConfiguration or @ContextHierarchy
- * annotation, may also have a @WebAppConfiguration or @DirtiesContext annotation.
+ * <li>The step definitions class with &#64;ContextConfiguration or &#64;ContextHierarchy
+ * annotation, may also have a &#64;WebAppConfiguration or &#64;DirtiesContext annotation.
  * </li>
  * <li>The step definitions added to the TestContextManagers context and
  * is reloaded for each scenario.</li>
  * </ul>
- * </p>
  * <p/>
- * <p>
  * Application beans are accessible from the step definitions using autowiring
  * (with annotations).
- * </p>
  */
 public class SpringFactory implements ObjectFactory {
 
     private ConfigurableListableBeanFactory beanFactory;
     private CucumberTestContextManager testContextManager;
 
-    private final Collection<Class<?>> stepClasses = new HashSet<Class<?>>();
+    private final Collection<Class<?>> stepClasses = new HashSet<>();
     private Class<?> stepClassWithSpringContext = null;
 
     public SpringFactory() {
@@ -112,7 +107,7 @@ public class SpringFactory implements ObjectFactory {
                 registerStepClassBeanDefinition(beanFactory, stepClass);
             }
         }
-        GlueCodeContext.INSTANCE.start();
+        GlueCodeContext.getInstance().start();
     }
 
     @SuppressWarnings("resource")
@@ -143,10 +138,7 @@ public class SpringFactory implements ObjectFactory {
     }
 
     private boolean isNewContextCreated() {
-        if (testContextManager == null) {
-            return false;
-        }
-        return !beanFactory.equals(testContextManager.getBeanFactory());
+        return testContextManager != null && !beanFactory.equals(testContextManager.getBeanFactory());
     }
 
     private void registerStepClassBeanDefinition(ConfigurableListableBeanFactory beanFactory, Class<?> stepClass) {
@@ -161,7 +153,7 @@ public class SpringFactory implements ObjectFactory {
     @Override
     public void stop() {
         notifyContextManagerAboutTestClassFinished();
-        GlueCodeContext.INSTANCE.stop();
+        GlueCodeContext.getInstance().stop();
     }
 
     private void notifyContextManagerAboutTestClassFinished() {
