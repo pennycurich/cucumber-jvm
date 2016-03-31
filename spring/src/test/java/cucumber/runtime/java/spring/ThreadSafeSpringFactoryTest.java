@@ -23,11 +23,11 @@ import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
-public class SpringFactoryTest {
+public class ThreadSafeSpringFactoryTest {
 
     @Test
     public void shouldGiveUsNewStepInstancesForEachScenario() {
-        final ObjectFactory factory = new SpringFactory();
+        final ObjectFactory factory = new ThreadSafeSpringFactory();
         factory.addClass(BellyStepdefs.class);
 
         // Scenario 1
@@ -47,7 +47,7 @@ public class SpringFactoryTest {
 
     @Test
     public void shouldGiveUsNewInstancesOfGlueScopeClassesForEachScenario() {
-        final ObjectFactory factory = new SpringFactory();
+        final ObjectFactory factory = new ThreadSafeSpringFactory();
         factory.addClass(BellyStepdefs.class);
         factory.addClass(AutowiresPlatformTransactionManager.class);
 
@@ -71,14 +71,14 @@ public class SpringFactoryTest {
     @Test
     public void shouldNeverCreateNewApplicationBeanInstances() {
         // Feature 1
-        final ObjectFactory factory1 = new SpringFactory();
+        final ObjectFactory factory1 = new ThreadSafeSpringFactory();
         factory1.addClass(BellyStepdefs.class);
         factory1.start();
         final BellyBean o1 = factory1.getInstance(BellyStepdefs.class).getBellyBean();
         factory1.stop();
 
         // Feature 2
-        final ObjectFactory factory2 = new SpringFactory();
+        final ObjectFactory factory2 = new ThreadSafeSpringFactory();
         factory2.addClass(BellyStepdefs.class);
         factory2.start();
         final BellyBean o2 = factory2.getInstance(BellyStepdefs.class).getBellyBean();
@@ -92,14 +92,14 @@ public class SpringFactoryTest {
     @Test
     public void shouldNeverCreateNewApplicationBeanInstancesUsingMetaConfiguration() {
         // Feature 1
-        final ObjectFactory factory1 = new SpringFactory();
+        final ObjectFactory factory1 = new ThreadSafeSpringFactory();
         factory1.addClass(BellyMetaStepdefs.class);
         factory1.start();
         final BellyBean o1 = factory1.getInstance(BellyMetaStepdefs.class).getBellyBean();
         factory1.stop();
 
         // Feature 2
-        final ObjectFactory factory2 = new SpringFactory();
+        final ObjectFactory factory2 = new ThreadSafeSpringFactory();
         factory2.addClass(BellyMetaStepdefs.class);
         factory2.start();
         final BellyBean o2 = factory2.getInstance(BellyMetaStepdefs.class).getBellyBean();
@@ -112,7 +112,7 @@ public class SpringFactoryTest {
 
     @Test
     public void shouldFindStepDefsCreatedImplicitlyForAutowiring() {
-        final ObjectFactory factory1 = new SpringFactory();
+        final ObjectFactory factory1 = new ThreadSafeSpringFactory();
         factory1.addClass(WithSpringAnnotations.class);
         factory1.addClass(OneStepDef.class);
         factory1.addClass(ThirdStepDef.class);
@@ -129,7 +129,7 @@ public class SpringFactoryTest {
 
     @Test
     public void shouldReuseStepDefsCreatedImplicitlyForAutowiring() {
-        final ObjectFactory factory1 = new SpringFactory();
+        final ObjectFactory factory1 = new ThreadSafeSpringFactory();
         factory1.addClass(WithSpringAnnotations.class);
         factory1.addClass(OneStepDef.class);
         factory1.addClass(ThirdStepDef.class);
@@ -146,7 +146,7 @@ public class SpringFactoryTest {
 
     @Test
     public void shouldRespectCommonAnnotationsInStepDefs() {
-        final ObjectFactory factory = new SpringFactory();
+        final ObjectFactory factory = new ThreadSafeSpringFactory();
         factory.addClass(WithSpringAnnotations.class);
         factory.start();
         WithSpringAnnotations stepdef = factory.getInstance(WithSpringAnnotations.class);
@@ -158,7 +158,7 @@ public class SpringFactoryTest {
 
     @Test
     public void shouldRespectContextHierarchyInStepDefs() {
-        final ObjectFactory factory = new SpringFactory();
+        final ObjectFactory factory = new ThreadSafeSpringFactory();
         factory.addClass(WithContextHierarchyAnnotation.class);
         factory.start();
         WithContextHierarchyAnnotation stepdef = factory.getInstance(WithContextHierarchyAnnotation.class);
@@ -170,7 +170,7 @@ public class SpringFactoryTest {
 
     @Test
     public void shouldRespectDirtiesContextAnnotationsInStepDefs() {
-        final ObjectFactory factory = new SpringFactory();
+        final ObjectFactory factory = new ThreadSafeSpringFactory();
         factory.addClass(DirtiesContextBellyStepDefs.class);
 
         // Scenario 1
@@ -191,7 +191,7 @@ public class SpringFactoryTest {
 
     @Test
     public void shouldRespectDirtiesContextAnnotationsInStepDefsUsingMetaConfiguration() {
-        final ObjectFactory factory = new SpringFactory();
+        final ObjectFactory factory = new ThreadSafeSpringFactory();
         factory.addClass(DirtiesContextBellyMetaStepDefs.class);
 
         // Scenario 1
@@ -212,7 +212,7 @@ public class SpringFactoryTest {
 
     @Test
     public void shouldRespectCustomPropertyPlaceholderConfigurer() {
-        final ObjectFactory factory = new SpringFactory();
+        final ObjectFactory factory = new ThreadSafeSpringFactory();
         factory.addClass(WithSpringAnnotations.class);
         factory.start();
         WithSpringAnnotations stepdef = factory.getInstance(WithSpringAnnotations.class);
@@ -223,7 +223,7 @@ public class SpringFactoryTest {
 
     @Test
     public void shouldUseCucumberXmlIfNoClassWithSpringAnnotationIsFound() {
-        final ObjectFactory factory = new SpringFactory();
+        final ObjectFactory factory = new ThreadSafeSpringFactory();
         factory.addClass(AutowiresPlatformTransactionManager.class);
         factory.start();
         final AutowiresPlatformTransactionManager o1 =
@@ -236,14 +236,14 @@ public class SpringFactoryTest {
 
     @Test
     public void shouldAllowClassesWithSameSpringAnnotations() {
-        final ObjectFactory factory = new SpringFactory();
+        final ObjectFactory factory = new ThreadSafeSpringFactory();
         factory.addClass(WithSpringAnnotations.class);
         factory.addClass(BellyStepdefs.class);
     }
 
     @Test(expected=CucumberException.class)
     public void shouldFailIfClassesWithDifferentSpringAnnotationsAreFound() {
-        final ObjectFactory factory = new SpringFactory();
+        final ObjectFactory factory = new ThreadSafeSpringFactory();
         factory.addClass(WithContextHierarchyAnnotation.class);
         factory.addClass(WithDifferentContextHierarchyAnnotation.class);
     }

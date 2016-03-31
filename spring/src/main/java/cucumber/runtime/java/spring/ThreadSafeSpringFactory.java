@@ -39,15 +39,14 @@ import java.util.HashSet;
  * Application beans are accessible from the step definitions using autowiring
  * (with annotations).
  */
-public class SpringFactory implements ObjectFactory {
-
+public class ThreadSafeSpringFactory implements ObjectFactory {
     private ConfigurableListableBeanFactory beanFactory;
     private CucumberTestContextManager testContextManager;
 
     private final Collection<Class<?>> stepClasses = new HashSet<>();
     private Class<?> stepClassWithSpringContext = null;
 
-    public SpringFactory() {
+    public ThreadSafeSpringFactory() {
     }
 
     @Override
@@ -119,6 +118,7 @@ public class SpringFactory implements ObjectFactory {
             applicationContext = new GenericApplicationContext();
         }
         applicationContext.registerShutdownHook();
+
         ConfigurableListableBeanFactory beanFactory = applicationContext.getBeanFactory();
         beanFactory.registerScope(GlueCodeScope.NAME, new GlueCodeScope());
         for (Class<?> stepClass : stepClasses) {
