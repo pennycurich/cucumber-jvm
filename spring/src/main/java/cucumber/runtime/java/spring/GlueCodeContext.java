@@ -2,78 +2,71 @@ package cucumber.runtime.java.spring;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 class GlueCodeContext {
+
 	protected static final AtomicInteger COUNTER = new AtomicInteger(0);
 
-    protected static final ThreadLocal<GlueCodeContext> GLUE_CODE_CONTEXT_REFERENCE = new ThreadLocal<>();
-    protected static final ThreadLocal<Map<String, Object>> OBJECTS_REFERENCE = new ThreadLocal<>();
-    protected static final ThreadLocal<Map<String, Runnable>> CALLBACKS_REFERENCE = new ThreadLocal<>();
+	protected static final ThreadLocal<GlueCodeContext> GLUE_CODE_CONTEXT_REFERENCE = new ThreadLocal<>();
 
 	private Integer id;
+	private Map<String, Object> objectMap;
+	private Map<String, Runnable> callbackMap;
 
-    protected GlueCodeContext() {
-        GLUE_CODE_CONTEXT_REFERENCE.set(this);
-        OBJECTS_REFERENCE.set(new HashMap<>());
-        CALLBACKS_REFERENCE.set(new HashMap<>());
-    }
+	protected GlueCodeContext() {
+		GLUE_CODE_CONTEXT_REFERENCE.set(this);
+		objectMap = new HashMap<>();
+		callbackMap = new LinkedHashMap<>();
+	}
 
-    public void start() {
-        cleanUp();
+	public void start() {
+		cleanUp();
 		id = COUNTER.incrementAndGet();
-    }
+	}
 
+	protected void cleanUp() {
+		objectMap.clear();
+		callbackMap.clear();
+	}
 
-    protected void cleanUp() {
-        OBJECTS_REFERENCE.get().clear();
-        CALLBACKS_REFERENCE.get().clear();
-    }
-
-    public String getId() {
+	public String getId() {
 		Thread thread = Thread.currentThread();
 		long threadId = thread.getId();
-        return String.format("cucumber_glue_%s:%s", threadId, id);
-    }
+		return String.format("cucumber_glue_%s:%s", threadId, id);
+	}
 
-    public void stop() {
-        runCallbacks();
-        cleanUp();
-    }
+	public void stop() {
+		runCallbacks();
+		cleanUp();
+	}
 
-    protected void runCallbacks() {
-        Map<String, Runnable> map = CALLBACKS_REFERENCE.get();
-        Collection<Runnable> callbacks = map.values();
-        callbacks.forEach(Runnable::run);
-    }
+	protected void runCallbacks() {
+		Collection<Runnable> callbacks = callbackMap.values();
+		callbacks.forEach(Runnable::run);
+	}
 
-    public Object get(String name) {
-        Map<String, Object> map = OBJECTS_REFERENCE.get();
-        return map.get(name);
-    }
+	public Object get(String name) {
+		return objectMap.get(name);
+	}
 
-    public Object put(String name, Object object) {
-        Map<String, Object> map = OBJECTS_REFERENCE.get();
-        return map.put(name, object);
-    }
+	public Object put(String name, Object object) {
+		return objectMap.put(name, object);
+	}
 
-    public Object remove(String name) {
-        Map<String, Runnable> callbacksMap = CALLBACKS_REFERENCE.get();
-        callbacksMap.remove(name);
+	public Object remove(String name) {
+		callbackMap.remove(name);
+		return objectMap.remove(name);
+	}
 
-        Map<String, Object> objectsMap = OBJECTS_REFERENCE.get();
-        return objectsMap.remove(name);
-    }
+	public Runnable registerDestructionCallback(String name, Runnable callback) {
+		return callbackMap.put(name, callback);
+	}
 
-
-    public Runnable registerDestructionCallback(String name, Runnable callback) {
-        Map<String, Runnable> map = CALLBACKS_REFERENCE.get();
-        return map.put(name, callback);
-    }
-
-    public static GlueCodeContext getInstance() {
-        GlueCodeContext context = GLUE_CODE_CONTEXT_REFERENCE.get();
-        return null == context ? new GlueCodeContext() : context;
-    }
+	public static GlueCodeContext getInstance() {
+		GlueCodeContext context = GLUE_CODE_CONTEXT_REFERENCE.get();
+		return null == context ? new GlueCodeContext() : context;
+	}
 }
