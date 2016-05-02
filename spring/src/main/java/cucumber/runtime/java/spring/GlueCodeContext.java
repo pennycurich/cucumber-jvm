@@ -1,6 +1,8 @@
 package cucumber.runtime.java.spring;
 
+import java.lang.ref.WeakReference;
 import java.util.Deque;
+import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ConcurrentMap;
@@ -10,7 +12,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 class GlueCodeContext {
-	protected static final Deque<GlueCodeContext> ALL_CONTEXTS = new ConcurrentLinkedDeque<>();
+
+	protected static final Deque<WeakReference<GlueCodeContext>> ALL_CONTEXTS = new ConcurrentLinkedDeque<>();
 	protected static final AtomicInteger COUNTER = new AtomicInteger(0);
 
 	private final ConcurrentMap<String, Object> objectMap;
@@ -19,7 +22,7 @@ class GlueCodeContext {
 	public GlueCodeContext() {
 		objectMap = new ConcurrentHashMap<>();
 		callbackMap = new ConcurrentHashMap<>();
-		ALL_CONTEXTS.add(this);
+		ALL_CONTEXTS.add(new WeakReference<>(this));
 	}
 
 	public String getId() {
@@ -52,26 +55,42 @@ class GlueCodeContext {
 	protected void runDestructionCallback(Runnable callback) {
 		try {
 			callback.run();
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			Log log = LogFactory.getLog(this.getClass());
 			log.warn("unable to run destruction callback: " + callback, e);
 		}
 	}
 
 	public static void start() {
-		for (GlueCodeContext context : ALL_CONTEXTS) {
-			context.objectMap.clear();
-			context.callbackMap.clear();
+		Iterator<WeakReference<GlueCodeContext>> iterator = ALL_CONTEXTS.iterator();
+		while (iterator.hasNext()) {
+			WeakReference<GlueCodeContext> reference = iterator.next();
+			GlueCodeContext glueCodeContext = reference.get();
+			if (null == glueCodeContext) {
+				iterator.remove();
+			}
+			else {
+				glueCodeContext.objectMap.clear();
+				glueCodeContext.callbackMap.clear();
+			}
 		}
 		COUNTER.incrementAndGet();
 	}
 
 	public static void stop() {
-		for (GlueCodeContext context : ALL_CONTEXTS) {
-			context.objectMap.clear();
-			context.runDestructionCallbacks();
-			context.callbackMap.clear();
-
+		Iterator<WeakReference<GlueCodeContext>> iterator = ALL_CONTEXTS.iterator();
+		while (iterator.hasNext()) {
+			WeakReference<GlueCodeContext> reference = iterator.next();
+			GlueCodeContext glueCodeContext = reference.get();
+			if (null == glueCodeContext) {
+				iterator.remove();
+			}
+			else {
+				glueCodeContext.objectMap.clear();
+				glueCodeContext.runDestructionCallbacks();
+				glueCodeContext.callbackMap.clear();
+			}
 		}
 	}
 }
