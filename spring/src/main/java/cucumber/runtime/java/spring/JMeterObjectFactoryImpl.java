@@ -118,7 +118,7 @@ public class JMeterObjectFactoryImpl implements ObjectFactory {
 
 			context = getContext();
 			context.registerShutdownHook();
-			//GlueCodeContext.getInstance().start();
+			GlueCodeContext.start();
 		}
 
 		registerGlueCodeScope();
@@ -155,7 +155,7 @@ public class JMeterObjectFactoryImpl implements ObjectFactory {
 	@Override
 	public void stop() {
 		notifyContextManagerAboutTestClassFinished();
-		GlueCodeContext.getInstance().stop();
+		GlueCodeContext.stop();
 
 		ConfigurableApplicationContext context = getContext();
 		try {

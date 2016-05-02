@@ -1,47 +1,31 @@
 package cucumber.runtime.java.spring;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.Deque;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 class GlueCodeContext {
-	protected static final ThreadLocal<GlueCodeContext> GLUE_CODE_CONTEXT_REFERENCE = new ThreadLocal<>();
+	protected static final Deque<GlueCodeContext> ALL_CONTEXTS = new ConcurrentLinkedDeque<>();
+	protected static final AtomicInteger COUNTER = new AtomicInteger(0);
 
-	private int id;
-	private Map<String, Object> objectMap;
-	private Map<String, Runnable> callbackMap;
+	private final ConcurrentMap<String, Object> objectMap;
+	private final ConcurrentMap<String, Runnable> callbackMap;
 
-	protected GlueCodeContext() {
-		objectMap = new HashMap<>();
-		callbackMap = new LinkedHashMap<>();
-		id = 0;
-	}
-
-	public void start() {
-		cleanUp();
-		id++;
-	}
-
-	protected void cleanUp() {
-		objectMap.clear();
-		callbackMap.clear();
+	public GlueCodeContext() {
+		objectMap = new ConcurrentHashMap<>();
+		callbackMap = new ConcurrentHashMap<>();
+		ALL_CONTEXTS.add(this);
 	}
 
 	public String getId() {
 		Thread thread = Thread.currentThread();
 		long threadId = thread.getId();
-		return String.format("cucumber_glue_%s:%s", threadId, id);
-	}
-
-	public void stop() {
-		runCallbacks();
-		cleanUp();
-	}
-
-	protected void runCallbacks() {
-		Collection<Runnable> callbacks = callbackMap.values();
-		callbacks.forEach(Runnable::run);
+		return String.format("cucumber_glue_%s:%s", threadId, COUNTER.get());
 	}
 
 	public Object get(String name) {
@@ -61,13 +45,33 @@ class GlueCodeContext {
 		return callbackMap.put(name, callback);
 	}
 
-	public static GlueCodeContext getInstance() {
-		GlueCodeContext context = GLUE_CODE_CONTEXT_REFERENCE.get();
-		if (null == context) {
-			context = new GlueCodeContext();
-			GLUE_CODE_CONTEXT_REFERENCE.set(context);
-			context.start();
+	protected void runDestructionCallbacks() {
+		callbackMap.values().forEach(this::runDestructionCallback);
+	}
+
+	protected void runDestructionCallback(Runnable callback) {
+		try {
+			callback.run();
+		} catch (Exception e) {
+			Log log = LogFactory.getLog(this.getClass());
+			log.warn("unable to run destruction callback: " + callback, e);
 		}
-		return context;
+	}
+
+	public static void start() {
+		for (GlueCodeContext context : ALL_CONTEXTS) {
+			context.objectMap.clear();
+			context.callbackMap.clear();
+		}
+		COUNTER.incrementAndGet();
+	}
+
+	public static void stop() {
+		for (GlueCodeContext context : ALL_CONTEXTS) {
+			context.objectMap.clear();
+			context.runDestructionCallbacks();
+			context.callbackMap.clear();
+
+		}
 	}
 }

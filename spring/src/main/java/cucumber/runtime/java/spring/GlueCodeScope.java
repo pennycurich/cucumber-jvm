@@ -6,27 +6,38 @@ import org.springframework.beans.factory.config.Scope;
 class GlueCodeScope implements Scope {
 	public static final String NAME = "cucumber-glue";
 
+	protected static final ThreadLocal<GlueCodeContext> THREAD_LOCAL_CONTEXT= new ThreadLocal<>();
+
 	@Override
 	public Object get(String name, ObjectFactory<?> objectFactory) {
-		GlueCodeContext context = GlueCodeContext.getInstance();
-		Object obj = context.get(name);
-		if (obj == null) {
-			obj = objectFactory.getObject();
-			context.put(name, obj);
+		GlueCodeContext context = getGlueCodeContext();
+		Object o = context.get(name);
+		if (o == null) {
+			o = objectFactory.getObject();
+			context.put(name, o);
 		}
-
-		return obj;
+		return o;
 	}
+
+	protected GlueCodeContext getGlueCodeContext() {
+		GlueCodeContext context = THREAD_LOCAL_CONTEXT.get();
+		if (null == context) {
+			context = new GlueCodeContext();
+			THREAD_LOCAL_CONTEXT.set(context);
+		}
+		return context;
+	}
+
 
 	@Override
 	public Object remove(String name) {
-		GlueCodeContext context = GlueCodeContext.getInstance();
-		return context.remove(name);
+		GlueCodeContext context = THREAD_LOCAL_CONTEXT.get();
+		return null == context ? null : context.remove(name);
 	}
 
 	@Override
 	public void registerDestructionCallback(String name, Runnable callback) {
-		GlueCodeContext context = GlueCodeContext.getInstance();
+		GlueCodeContext context = getGlueCodeContext();
 		context.registerDestructionCallback(name, callback);
 	}
 
@@ -37,7 +48,7 @@ class GlueCodeScope implements Scope {
 
 	@Override
 	public String getConversationId() {
-		GlueCodeContext context = GlueCodeContext.getInstance();
+		GlueCodeContext context = getGlueCodeContext();
 		return context.getId();
 	}
 }
