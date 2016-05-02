@@ -43,7 +43,7 @@ import java.util.HashSet;
  * Application beans are accessible from the step definitions using autowiring
  * (with annotations).
  */
-public class JMeterObjectFactoryImpl implements ObjectFactory, JMeterObjectFactory {
+public class JMeterObjectFactoryImpl implements ObjectFactory {
 
 	protected static final String CUCUMBER_RESOURCE = "cucumber.xml";
 
@@ -156,10 +156,7 @@ public class JMeterObjectFactoryImpl implements ObjectFactory, JMeterObjectFacto
 	public void stop() {
 		notifyContextManagerAboutTestClassFinished();
 		GlueCodeContext.getInstance().stop();
-	}
 
-	@Override
-	public void destroy() {
 		ConfigurableApplicationContext context = getContext();
 		try {
 			if (null != context && context.isActive()) {
