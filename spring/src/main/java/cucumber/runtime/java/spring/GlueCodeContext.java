@@ -13,7 +13,6 @@ class GlueCodeContext {
 	private Map<String, Runnable> callbackMap;
 
 	protected GlueCodeContext() {
-		GLUE_CODE_CONTEXT_REFERENCE.set(this);
 		objectMap = new HashMap<>();
 		callbackMap = new LinkedHashMap<>();
 		id = 0;
@@ -64,6 +63,11 @@ class GlueCodeContext {
 
 	public static GlueCodeContext getInstance() {
 		GlueCodeContext context = GLUE_CODE_CONTEXT_REFERENCE.get();
-		return null == context ? new GlueCodeContext() : context;
+		if (null == context) {
+			context = new GlueCodeContext();
+			GLUE_CODE_CONTEXT_REFERENCE.set(context);
+			context.start();
+		}
+		return context;
 	}
 }
