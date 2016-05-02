@@ -8,8 +8,7 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import cucumber.runtime.CucumberException;
 
 class GlueCodeContext {
 
@@ -57,8 +56,7 @@ class GlueCodeContext {
 			callback.run();
 		}
 		catch (Exception e) {
-			Log log = LogFactory.getLog(this.getClass());
-			log.warn("unable to run destruction callback: " + callback, e);
+			throw new CucumberException("unable to execute destruction callback: " + callback, e);
 		}
 	}
 
