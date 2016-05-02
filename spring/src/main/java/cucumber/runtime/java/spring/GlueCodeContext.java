@@ -4,15 +4,11 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
 class GlueCodeContext {
-
-	protected static final AtomicInteger COUNTER = new AtomicInteger(0);
-
 	protected static final ThreadLocal<GlueCodeContext> GLUE_CODE_CONTEXT_REFERENCE = new ThreadLocal<>();
 
-	private Integer id;
+	private int id;
 	private Map<String, Object> objectMap;
 	private Map<String, Runnable> callbackMap;
 
@@ -20,11 +16,12 @@ class GlueCodeContext {
 		GLUE_CODE_CONTEXT_REFERENCE.set(this);
 		objectMap = new HashMap<>();
 		callbackMap = new LinkedHashMap<>();
+		id = 0;
 	}
 
 	public void start() {
 		cleanUp();
-		id = COUNTER.incrementAndGet();
+		id++;
 	}
 
 	protected void cleanUp() {
