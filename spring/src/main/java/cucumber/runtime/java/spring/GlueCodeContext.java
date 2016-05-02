@@ -3,24 +3,26 @@ package cucumber.runtime.java.spring;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 class GlueCodeContext {
+	protected static final AtomicInteger COUNTER = new AtomicInteger(0);
+
     protected static final ThreadLocal<GlueCodeContext> GLUE_CODE_CONTEXT_REFERENCE = new ThreadLocal<>();
-    protected static final ThreadLocal<Integer> COUNTER_REFERENCE = new ThreadLocal<>();
     protected static final ThreadLocal<Map<String, Object>> OBJECTS_REFERENCE = new ThreadLocal<>();
     protected static final ThreadLocal<Map<String, Runnable>> CALLBACKS_REFERENCE = new ThreadLocal<>();
 
+	private Integer id;
 
     protected GlueCodeContext() {
         GLUE_CODE_CONTEXT_REFERENCE.set(this);
-        COUNTER_REFERENCE.set(0);
         OBJECTS_REFERENCE.set(new HashMap<>());
         CALLBACKS_REFERENCE.set(new HashMap<>());
     }
 
     public void start() {
         cleanUp();
-        COUNTER_REFERENCE.set(COUNTER_REFERENCE.get() + 1);
+		id = COUNTER.incrementAndGet();
     }
 
 
@@ -30,8 +32,9 @@ class GlueCodeContext {
     }
 
     public String getId() {
-        long threadId = Thread.currentThread().getId();
-        return String.format("cucumber_glue_%s:%s", threadId, COUNTER_REFERENCE.get());
+		Thread thread = Thread.currentThread();
+		long threadId = thread.getId();
+        return String.format("cucumber_glue_%s:%s", threadId, id);
     }
 
     public void stop() {
